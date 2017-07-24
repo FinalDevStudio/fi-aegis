@@ -1,6 +1,6 @@
 {
   "name": "fi-aegis",
-  "version": "1.4.1",
+  "version": "0.0.0",
   "description": "Web Application Security Middleware.",
   "main": "index",
   "scripts": {
