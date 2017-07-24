@@ -26,7 +26,7 @@ app.use(aegis({
       angular: true
     },
     xframe: 'SAMEORIGIN',
-    p3p: 'ABCDEF',
+    p3p: 'ABCDEF', /*[DEPRECATED]*/
     hsts: {
       maxAge: 31536000,
       includeSubDomains: true,
@@ -43,13 +43,13 @@ Setting any value to `false` will disable it. Alternately, you can opt into meth
 app.use(aegis.csrf());
 app.use(aegis.csp({ angular: true }));
 app.use(aegis.xframe('SAMEORIGIN'));
-app.use(aegis.p3p('ABCDEF'));
+app.use(aegis.p3p('ABCDEF')); /*[DEPRECATED]*/
 app.use(aegis.hsts({ maxAge: 31536000 }));
 app.use(aegis.xssProtection(true));
 app.use(aegis.nosniff());
 ```
 
-__Please note that you must use [express-session](https://github.com/expressjs/session), [cookie-session](https://github.com/expressjs/cookie-session), their express 3.x alternatives, or other session object management in order to use Fi Wasm.__
+__Please note that you must use [express-session](https://github.com/expressjs/session), [cookie-session](https://github.com/expressjs/cookie-session), their express 3.x alternatives, or other session object management in order to use Fi Aegis.__
 
 
 ## API
@@ -223,6 +223,7 @@ Enables [X-XSS-Protection](https://developer.mozilla.org/en-US/docs/Web/HTTP/Hea
 aegis.xssProtection(options);
 ```
 
+
 #### Options:
 
 | Param | Type | Required | Default | Description |
@@ -231,7 +232,14 @@ aegis.xssProtection(options);
 | `mode` | `String` | No | `block` | Mode to set on the header. |
 
 
+### X-Content-Type-Options
 
-### aegis.nosniff()
+Enables [X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options) header to prevent MIME-sniffing a response away from the declared content-type.
 
-Enables [X-Content-Type-Options](https://blogs.msdn.microsoft.com/ie/2008/09/02/ie8-security-part-vi-beta-2-update/) header to prevent MIME-sniffing a response away from the declared content-type.
+
+#### Usage:
+
+```js
+aegis.nosniff();
+```
+
