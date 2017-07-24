@@ -1,64 +1,50 @@
-/*───────────────────────────────────────────────────────────────────────────*\
-│  Copyright (C) 2016 PayPal                                                  │
-│                                                                             │
-│hh ,'""`.                                                                    │
-│  / _  _ \  Licensed under the Apache License, Version 2.0 (the "License");  │
-│  |(@)(@)|  you may not use this file except in compliance with the License. │
-│  )  __  (  You may obtain a copy of the License at                          │
-│ /,'))((`.\                                                                  │
-│(( ((  )) ))    http://www.apache.org/licenses/LICENSE-2.0                   │
-│ `\ `)(' /'                                                                  │
-│                                                                             │
-│   Unless required by applicable law or agreed to in writing, software       │
-│   distributed under the License is distributed on an "AS IS" BASIS,         │
-│   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  │
-│   See the License for the specific language governing permissions and       │
-│   limitations under the License.                                            │
-\*───────────────────────────────────────────────────────────────────────────*/
 'use strict';
 
+var aegis = module.exports = options => {
+  var headers = [];
 
-/**
- * Outputs all security headers based on configuration
- * @param {Object} options The configuration object.
- */
-var lusca = module.exports = function (options) {
-    var headers = [];
+  if (options) {
+    Object.keys(aegis).forEach(key => {
+      var config = options[key];
 
-    if (options) {
-        Object.keys(lusca).forEach(function (key) {
-            var config = options[key];
+      if (config) {
+        headers.push(aegis[key](config));
+      }
+    });
+  }
 
-            if (config) {
-                headers.push(lusca[key](config));
-            }
-        });
-    }
+  /**
+   * Fi Aegis middleware.
+   *
+   * @param {Object} req Express request object.
+   * @param {Object} res Express response object.
+   * @param {Function} next Express next middleware callback.
+   */
+  function middleware(req, res, next) {
+    var chain = next;
 
-    return function lusca(req, res, next) {
-        var chain = next;
+    headers.forEach(header => {
+      chain = (next => {
+        return err => {
+          if (err) {
+            return next(err);
+          }
 
-        headers.forEach(function (header) {
-            chain = (function (next) {
-                return function (err) {
-                    if (err) {
-                        next(err);
-                        return;
-                    }
-                    header(req, res, next);
-                };
-            }(chain));
-        });
+          header(req, res, next);
+        };
+      })(chain);
+    });
 
-        chain();
-    };
+    chain();
+  }
+
+  return middleware;
 };
 
-
-lusca.csrf = require('./lib/csrf');
-lusca.csp = require('./lib/csp');
-lusca.hsts = require('./lib/hsts');
-lusca.p3p = require('./lib/p3p');
-lusca.xframe = require('./lib/xframes');
-lusca.xssProtection = require('./lib/xssprotection');
-lusca.nosniff = require('./lib/nosniff');
+aegis.csrf = require('./lib/csrf');
+aegis.csp = require('./lib/csp');
+aegis.hsts = require('./lib/hsts');
+aegis.p3p = require('./lib/p3p');
+aegis.xframe = require('./lib/xframes');
+aegis.xssProtection = require('./lib/xssprotection');
+aegis.nosniff = require('./lib/nosniff');
