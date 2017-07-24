@@ -6,11 +6,9 @@
 
 ### Web Application Security Middleware
 
-This is a fork of [lusca](https://github.com/krakenjs/lusca) aiming to be more actively maintained.
+This fork is based on [lusca](https://github.com/krakenjs/lusca)'s v1.4.1 but has changed greatly since.
 
-This fork is based on lusca's v1.4.1 but has changed greatly since.
-
-The mayor changes are minor optimizations and code refactoring.
+The most relevant changes are minor optimizations, code refactoring and improved documentation.
 
 
 ## Usage
