@@ -1,32 +1,30 @@
-/*global describe:false, it:false */
 'use strict';
 
-
-var lusca = require('../index'),
-    request = require('supertest'),
-    assert = require('assert'),
-    mock = require('./mocks/app');
-
+const aegis = require('../index');
+const request = require('supertest');
+const assert = require('assert');
+const mock = require('./mocks/app');
 
 describe('P3P', function () {
 
-    it('method', function () {
-        assert(typeof lusca.p3p === 'function');
+  it('should be a function', function () {
+    assert(typeof aegis.p3p === 'function');
+  });
+
+  it('should respond the custom P3P header', function (done) {
+    var config = {
+      p3p: 'MY_P3P_VALUE'
+    };
+
+    var app = mock(config);
+
+    app.get('/', function (req, res) {
+      res.status(200).end();
     });
 
-
-    it('header', function (done) {
-        var config = { p3p: 'MY_P3P_VALUE' },
-            app = mock(config);
-
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
-
-        request(app)
-            .get('/')
-            .expect('P3P', config.p3p)
-            .expect(200, done);
-    });
+    request(app).get('/')
+      .expect('P3P', config.p3p)
+      .expect(200, done);
+  });
 
 });

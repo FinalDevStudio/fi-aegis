@@ -1,73 +1,85 @@
-/*global describe:false, it:false */
 'use strict';
 
-
-var lusca = require('../index'),
-    request = require('supertest'),
-    assert = require('assert'),
-    mock = require('./mocks/app');
-
-
+const aegis = require('../index');
+const request = require('supertest');
+const assert = require('assert');
+const mock = require('./mocks/app');
 
 describe('xssProtection', function () {
 
-    it('method', function () {
-        assert(typeof lusca.xssProtection === 'function');
+  it('should be a function', function () {
+    assert(typeof aegis.xssProtection === 'function');
+  });
+
+  it('should respond with an enabled as boolean header', function (done) {
+    var config = {
+      xssProtection: true
+    };
+
+    var app = mock(config);
+
+    app.get('/', (req, res) => {
+      res.status(200).end();
     });
 
-    it('header (enabled)', function (done) {
-        var config = { xssProtection: true },
-            app = mock(config);
+    request(app).get('/')
+      .expect('X-XSS-Protection', '1; mode=block')
+      .expect(200, done);
+  });
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+  it('should respond with an enabled, custom mode header', function (done) {
+    var config = {
+      xssProtection: {
+        enabled: 1,
+        mode: 'foo'
+      }
+    };
 
-        request(app)
-            .get('/')
-            .expect('X-XSS-Protection', '1; mode=block')
-            .expect(200, done);
+    var app = mock(config);
+
+    app.get('/', (req, res) => {
+      res.status(200).end();
     });
 
-    it('header (enabled; custom mode)', function (done) {
-        var config = { xssProtection: { enabled: 1, mode: 'foo' } },
-            app = mock(config);
+    request(app).get('/')
+      .expect('X-XSS-Protection', '1; mode=foo')
+      .expect(200, done);
+  });
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+  it('should respond with an enabled as boolean header', function (done) {
+    var config = {
+      xssProtection: {
+        enabled: true
+      }
+    };
 
-        request(app)
-            .get('/')
-            .expect('X-XSS-Protection', '1; mode=foo')
-            .expect(200, done);
+    var app = mock(config);
+
+    app.get('/', (req, res) => {
+      res.status(200).end();
     });
 
-    it('header (enabled is boolean; custom mode)', function (done) {
-        var config = { xssProtection: { enabled: true } },
-            app = mock(config);
+    request(app).get('/')
+      .expect('X-XSS-Protection', '1; mode=block')
+      .expect(200, done);
+  });
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+  it('should respond with a disabled header', function (done) {
+    var config = {
+      xssProtection: {
+        enabled: 0
+      }
+    };
 
-        request(app)
-            .get('/')
-            .expect('X-XSS-Protection', '1; mode=block')
-            .expect(200, done);
+    var app = mock(config);
+
+    app.get('/', (req, res) => {
+      res.status(200).end();
     });
 
-    it('header (!enabled)', function (done) {
-        var config = { xssProtection: { enabled: 0 } },
-            app = mock(config);
+    request(app).get('/')
+      .expect('X-XSS-Protection', '0; mode=block')
+      .expect(200, done);
+  });
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
-
-        request(app)
-            .get('/')
-            .expect('X-XSS-Protection', '0; mode=block')
-            .expect(200, done);
-    });
 });

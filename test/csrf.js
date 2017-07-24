@@ -1,493 +1,586 @@
-/*global describe:false, it:false */
 'use strict';
 
+const aegis = require('../index');
+const request = require('supertest');
+const assert = require('assert');
+const mock = require('./mocks/app');
+const dd = require('data-driven');
 
-var lusca = require('../index'),
-    request = require('supertest'),
-    assert = require('assert'),
-    mock = require('./mocks/app'),
-    dd = require('data-driven'),
-    sessionOptions = [{
-        value: 'session'
-    }, {
-        value: 'cookie'
-    }],
-    mapCookies = function (cookies) {
-        return cookies.map(function (r) {
-            return r.replace("; path=/; httponly", "");
-        }).join("; ");
-    };
+const ERR = require('../lib/errors');
 
+const sessionOptions = [{
+  value: 'session'
+}, {
+  value: 'cookie'
+}];
+
+/**
+ * Maps cookie values.
+ *
+ * @param {Array} cookies Cookies array.
+ *
+ * @returns {String} Mapped cookies.
+ */
+function mapCookies(cookies) {
+  return cookies.map(function (r) {
+    return r.replace('; path=/; httponly', '');
+  }).join('; ');
+}
 
 describe('CSRF', function () {
-    it('method', function () {
-        assert(typeof lusca.csrf === 'function');
+
+  it('should be a function', function () {
+    assert(typeof aegis.csrf === 'function');
+  });
+
+  it('expects a thrown error if no session object', function (done) {
+    var app = mock({
+      csrf: true
+    }, 'none');
+
+    app.get('/', (req, res) => {
+      res.send(200, {
+        token: res.locals._csrf
+      });
     });
-    it('expects a thrown error if no session object', function (done) {
-        var app = mock({
-            csrf: true
-        }, "none");
 
-        app.get('/', function (req, res) {
-            res.send(200, {
-                token: res.locals._csrf
-            });
+    request(app).get('/')
+      .expect(500)
+      .end((err, res) => {
+        assert(res.text.match(ERR.SESSION_INVALID));
+        done(err);
+      });
+  });
+
+  dd(sessionOptions, function () {
+    it('GETs have a CSRF token (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: true
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.get('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals._csrf
         });
+      });
 
-        request(app)
-            .get('/')
-            .expect(500)
-            .end(function (err, res) {
-                assert(res.text.match("lusca requires req.session to be available"));
-                done(err);
-            });
-    });
-    dd(sessionOptions, function () {
-        it('GETs have a CSRF token (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: true
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.get('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals._csrf
-                });
-            });
-
-            request(app)
-                .get('/')
-                .expect(200)
-                .end(function (err, res) {
-                    assert(res.body.token);
-                    done(err);
-                });
-        });
-
-
-        it('POST (200 OK with token) (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: true
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals._csrf
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    request(app)
-                        .post('/')
-                        .set('Cookie', mapCookies(res.headers['set-cookie']))
-                        .send({
-                            _csrf: res.body.token
-                        })
-                        .expect(200, done);
-                });
-        });
-
-        it('POST (403 Forbidden on invalid token) (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: true
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: Math.random()
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    request(app)
-                        .post('/')
-                        .set('Cookie', mapCookies(res.headers['set-cookie']))
-                        .send({
-                            _csrf: res.body.token
-                        })
-                        .expect(403)
-                        .end(function (err, res) {
-                            done(err);
-                        });
-                });
-        });
-
-
-        it('POST (403 Forbidden on no token) (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: true
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.get('/', function (req, res) {
-                res.status(200).end();
-            });
-
-            request(app)
-                .post('/')
-                .expect(403)
-                .end(function (err, res) {
-                    done(err);
-                });
-        });
-
-
-        it('Should allow custom keys (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        key: 'foobar',
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: {
-                        key: 'foobar'
-                    }
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals.foobar
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    request(app)
-                        .post('/')
-                        .set('cookie', mapCookies(res.headers['set-cookie']))
-                        .send({
-                            foobar: res.body.token
-                        })
-                        .expect(200, done);
-                });
-        });
-
-        it('Token can be sent through header instead of post body (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: true
-                },
-                app = mock(mockConfig, ctx.value);
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals._csrf
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    request(app)
-                        .post('/')
-                        .set('cookie', mapCookies(res.headers['set-cookie']))
-                        .set('x-csrf-token', res.body.token)
-                        .send({
-                            name: 'Test'
-                        })
-                        .expect(200, done);
-                });
-        });
-
-        it('Should allow custom headers (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        header: 'x-xsrf-token',
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: {
-                        header: 'x-xsrf-token'
-                    }
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals._csrf
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    request(app)
-                        .post('/')
-                        .set('cookie', mapCookies(res.headers['set-cookie']))
-                        .set('x-xsrf-token', res.body.token)
-                        .send({
-                            name: 'Test'
-                        })
-                        .expect(200, done);
-                });
-        });
-
-        it('Should be case-insensitive to custom headers', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        header: 'X-XSRF-TOKEN',
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: {
-                        header: 'X-XSRF-TOKEN'
-                    }
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals._csrf
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    request(app)
-                        .post('/')
-                        .set('cookie', mapCookies(res.headers['set-cookie']))
-                        .set('X-xsrf-token', res.body.token)
-                        .send({
-                            name: 'Test'
-                        })
-                        .expect(200, done);
-                });
-        });
-
-        it('Should allow custom secret key (session type: {value})', function (ctx, done) {
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: {
-                        secret: '_csrfSecret'
-                    }
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals._csrf
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    request(app)
-                        .post('/')
-                        .set('cookie', mapCookies(res.headers['set-cookie']))
-                        .send({
-                            _csrf: res.body.token
-                        })
-                        .expect(200, done);
-                });
-        });
-
-        it('Should allow custom functions (session type: {value})', function (ctx, done) {
-            var myToken = require('./mocks/token'),
-                mockConfig = {
-                    csrf: {
-                        impl: myToken
-                    }
-                },
-                app = mock(mockConfig, ctx.value);
-
-            app.all('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals._csrf
-                });
-            });
-
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    assert(myToken.value === res.body.token);
-
-                    request(app)
-                        .post('/')
-                    //.set('cookie', mapCookies(res.headers['set-cookie']))
-                    .send({
-                        _csrf: res.body.token
-                    })
-                        .expect(200, done);
-                });
+      request(app).get('/')
+        .expect(200)
+        .end((err, res) => {
+          assert(res.body.token);
+          done(err);
         });
     });
 
-    it('Should set a cookie with the cookie option', function (done) {
-        var app = mock({ csrf: { cookie: 'CSRF' }});
+    it('POST (200 OK with token) (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: true
+      };
 
-        app.all('/', function (req, res) {
-            res.status(200).send({
-                token: res.locals._csrf
-            });
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals._csrf
         });
+      });
 
-        request(app)
-            .get('/')
-            .end(function (err, res) {
-                function findToken(cookie) {
-                    cookie = decodeURIComponent(cookie);
-                    return ~cookie.indexOf(res.body.token);
-                }
-                assert(res.headers['set-cookie'].some(findToken));
-                done();
-            });
+      request(app).get('/').end((err, res) => {
+        request(app).post('/')
+          .set('Cookie', mapCookies(res.headers['set-cookie']))
+          .send({
+            _csrf: res.body.token
+          })
+          .expect(200, done);
+      });
     });
-    it('Should set options correctly with an angular shorthand option', function (done) {
-        // https://docs.angularjs.org/api/ng/service/$http#cross-site-request-forgery-xsrf-protection
-        var cookieKey = 'XSRF-TOKEN';
-        var header = 'X-XSRF-TOKEN';
-        var app = mock({ csrf: { angular: true, secret: '_csrfSecret' }});
 
-        app.all('/', function (req, res) {
-            res.status(200).send({
-                token: res.locals._csrf
-            });
+    describe('concurrent requests', function () {
+      it('POST (200 OK with token) (session type: {value})', function (ctx, done) {
+        var mockConfig = (ctx.value === 'cookie') ? {
+          csrf: {
+            secret: 'csrfSecret'
+          }
+        } : {
+          csrf: true
+        };
+
+        var app = mock(mockConfig, ctx.value);
+        var concurrency = 100;
+        var completed = 0;
+
+        app.all('/', (req, res) => {
+          res.status(200).send({
+            token: res.locals._csrf
+          });
         });
 
-        request(app)
-            .get('/')
-            .end(function (err, res) {
-                function findToken(cookie) {
-                    cookie = decodeURIComponent(cookie);
-                    return ~cookie.indexOf(cookieKey + '=' + res.body.token);
-                }
-                assert(res.headers['set-cookie'].some(findToken));
+        /**
+         * Done checker.
+         */
+        function checkIfDone() {
+          if (++completed === concurrency) {
+            done();
+          }
+        }
 
-                request(app)
-                    .post('/')
-                    .set('cookie', mapCookies(res.headers['set-cookie']))
-                    .set(header, res.body.token)
-                    .send({
-                        cool: 'stuff'
-                    })
-                    .expect(200, done);
-            });
+        for (let i = 0, l = concurrency; i < l; i++) {
+          request(app).get('/').end((err, res) => {
+            request(app).post('/')
+              .set('Cookie', mapCookies(res.headers['set-cookie']))
+              .send({
+                _csrf: res.body.token
+              })
+              .expect(200, checkIfDone);
+          });
+        }
+      });
     });
-    dd(sessionOptions, function () {
-        it('Should return the cached token for valid session on req.csrfToken', function (ctx, done) {
-            var key = 'foo';
-            var mockConfig = (ctx.value === 'cookie') ? {
-                    csrf: {
-                        key: key,
-                        secret: 'csrfSecret'
-                    }
-                } : {
-                    csrf: {key: key}
-                },
-                app = mock(mockConfig, ctx.value);
-    
-            function callCsrfToken(req, res, next) {
-                var token = res.locals[key];
-                assert(req.csrfToken() === token, 'req.csrfToken should use cached token');
-                assert(res.locals[key] === token, 'req.csrfToken should not mutate token');
-                next();
-            }
-    
-            app.get('/', callCsrfToken, function (req, res) {
-                res.status(200).send({
-                    token: res.locals[key]
-                });
-            });
-    
-            app.post('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals[key]
-                });
-            });
-    
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    var obj = {};
-                    obj[key] = res.body.token;
 
-                    request(app)
-                        .post('/')
-                        .set('Cookie', mapCookies(res.headers['set-cookie']))
-                        .send(obj)
-                        .expect(200, done);
-                });
+    it('POST (403 Forbidden on invalid token) (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: true
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: Math.random()
         });
-        it('Should generate a new token for invalid session on req.csrfToken', function (ctx, done) {
-            var key = 'foo',
-                secret = 'csrfSecret',
-                mockConfig = {
-                    csrf: {
-                        key: key,
-                        secret: secret
-                    }
-                },
-                app = mock(mockConfig, ctx.value);
-    
-            function destroy(req, res, next) {
-                delete req.session[secret];
-                next();
-            }
+      });
 
-            function callCsrfToken(req, res, next) {
-                var token = res.locals[key];
-                assert(req.csrfToken() !== token, 'req.csrfToken should not use cached token');
-                assert(res.locals[key] !== token, 'req.csrfToken should mutate token');
-                token = res.locals[key];
-                assert(req.csrfToken() === token, 'subsequent req.csrfToken should use cached token');
-                next();
-            }
-    
-            app.get('/', destroy, callCsrfToken, function (req, res) {
-                res.status(200).send({
-                    token: res.locals[key]
-                });
-            });
-    
-            app.post('/', function (req, res) {
-                res.status(200).send({
-                    token: res.locals[key]
-                });
-            });
-    
-            request(app)
-                .get('/')
-                .end(function (err, res) {
-                    var obj = {};
-                    obj[key] = res.body.token;
+      request(app).get('/').end((err, res) => {
+        request(app).post('/')
+          .set('Cookie', mapCookies(res.headers['set-cookie']))
+          .send({
+            _csrf: res.body.token
+          })
+          .expect(403)
+          .end((err, res) => done(err)); // eslint-disable-line
+      });
+    });
 
-                    request(app)
-                        .post('/')
-                        .set('Cookie', mapCookies(res.headers['set-cookie']))
-                        .send(obj)
-                        .expect(200, done);
-                });
+    it('POST (403 Forbidden on no token) (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: true
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.get('/', (req, res) => {
+        res.status(200).end();
+      });
+
+      request(app).post('/')
+        .expect(403)
+        .end((err, res) => done(err)); // eslint-disable-line
+    });
+
+    it('Should allow custom keys (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          key: 'foobar',
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: {
+          key: 'foobar'
+        }
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals.foobar
+        });
+      });
+
+      request(app).get('/')
+        .end((err, res) => {
+          request(app).post('/')
+            .set('cookie', mapCookies(res.headers['set-cookie']))
+            .send({
+              foobar: res.body.token
+            })
+            .expect(200, done);
         });
     });
+
+    it('Token can be sent through header instead of post body (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: true
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals._csrf
+        });
+      });
+
+      request(app).get('/')
+        .end((err, res) => {
+          request(app).post('/')
+            .set('cookie', mapCookies(res.headers['set-cookie']))
+            .set('x-csrf-token', res.body.token)
+            .send({
+              name: 'Test'
+            })
+            .expect(200, done);
+        });
+    });
+
+    it('Should allow custom headers (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          header: 'x-xsrf-token',
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: {
+          header: 'x-xsrf-token'
+        }
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals._csrf
+        });
+      });
+
+      request(app).get('/')
+        .end((err, res) => {
+          request(app).post('/')
+            .set('cookie', mapCookies(res.headers['set-cookie']))
+            .set('x-xsrf-token', res.body.token)
+            .send({
+              name: 'Test'
+            })
+            .expect(200, done);
+        });
+    });
+
+    it('Should be case-insensitive to custom headers', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          header: 'x-xsrf-token',
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: {
+          header: 'x-xsrf-token'
+        }
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals._csrf
+        });
+      });
+
+      request(app).get('/')
+        .end((err, res) => {
+          request(app).post('/')
+            .set('cookie', mapCookies(res.headers['set-cookie']))
+            .set('X-xsrf-token', res.body.token)
+            .send({
+              name: 'Test'
+            })
+            .expect(200, done);
+        });
+    });
+
+    it('Should allow custom secret key (session type: {value})', function (ctx, done) {
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          secret: 'csrfSecret'
+        }
+      } : {
+        csrf: {
+          secret: '_csrfSecret'
+        }
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals._csrf
+        });
+      });
+
+      request(app).get('/')
+        .end((err, res) => {
+          request(app).post('/')
+            .set('cookie', mapCookies(res.headers['set-cookie']))
+            .send({
+              _csrf: res.body.token
+            })
+            .expect(200, done);
+        });
+    });
+
+    it('Should allow custom functions (session type: {value})', function (ctx, done) {
+      var myToken = require('./mocks/token');
+      var mockConfig = {
+        csrf: {
+          impl: myToken
+        }
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      app.all('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals._csrf
+        });
+      });
+
+      request(app).get('/')
+        .end((err, res) => {
+          assert(myToken.value === res.body.token);
+
+          request(app).post('/')
+            //.set('cookie', mapCookies(res.headers['set-cookie']))
+            .send({
+              _csrf: res.body.token
+            })
+            .expect(200, done);
+        });
+    });
+  });
+
+  it('Should set a cookie with the cookie option', function (done) {
+    var app = mock({
+      csrf: {
+        cookie: 'CSRF'
+      }
+    });
+
+    app.all('/', (req, res) => {
+      res.status(200).send({
+        token: res.locals._csrf
+      });
+    });
+
+    request(app).get('/')
+      .end(function (err, res) {
+        /**
+         * Finds the token value inside a cookie.
+         *
+         * @param {String} cookie The cookie string.
+         *
+         * @returns {String} The token value.
+         */
+        function findToken(cookie) {
+          cookie = decodeURIComponent(cookie);
+
+          return ~cookie.indexOf(res.body.token);
+        }
+
+        assert(res.headers['set-cookie'].some(findToken));
+
+        done();
+      });
+  });
+
+  it('Should set options correctly with an angular shorthand option', function (done) {
+    var cookieKey = 'XSRF-TOKEN';
+    var header = 'X-XSRF-TOKEN';
+    var app = mock({
+      csrf: {
+        secret: '_csrfSecret',
+        angular: true
+      }
+    });
+
+    app.all('/', (req, res) => {
+      res.status(200).send({
+        token: res.locals._csrf
+      });
+    });
+
+    request(app).get('/')
+      .end(function (err, res) {
+        /**
+         * Finds the token value inside a cookie.
+         *
+         * @param {String} cookie The cookie string.
+         *
+         * @returns {String} The token value.
+         */
+        function findToken(cookie) {
+          cookie = decodeURIComponent(cookie);
+
+          return ~cookie.indexOf(cookieKey + '=' + res.body.token);
+        }
+
+        assert(res.headers['set-cookie'].some(findToken));
+
+        request(app).post('/')
+          .set('cookie', mapCookies(res.headers['set-cookie']))
+          .set(header, res.body.token)
+          .send({
+            cool: 'stuff'
+          })
+          .expect(200, done);
+      });
+  });
+
+  dd(sessionOptions, function () {
+    it('Should return the cached token for valid session on req.csrfToken', function (ctx, done) {
+      var key = 'foo';
+      var mockConfig = (ctx.value === 'cookie') ? {
+        csrf: {
+          secret: 'csrfSecret',
+          key
+        }
+      } : {
+        csrf: {
+          key
+        }
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      /**
+       * Calls the CSRF token.
+       *
+       * @param {String} req Express request object.
+       * @param {String} res Express response object.
+       * @param {Function} next Express next middleware callback.
+       */
+      function callCsrfToken(req, res, next) {
+        var token = res.locals[key];
+
+        assert(req.csrfToken() === token, 'req.csrfToken should use cached token');
+        assert(res.locals[key] === token, 'req.csrfToken should not mutate token');
+
+        next();
+      }
+
+      app.get('/', callCsrfToken, (req, res) => {
+        res.status(200).send({
+          token: res.locals[key]
+        });
+      });
+
+      app.post('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals[key]
+        });
+      });
+
+      request(app).get('/')
+        .end(function (err, res) {
+          var obj = {};
+          obj[key] = res.body.token;
+
+          request(app).post('/')
+            .set('Cookie', mapCookies(res.headers['set-cookie']))
+            .send(obj)
+            .expect(200, done);
+        });
+    });
+
+    it('Should generate a new token for invalid session on req.csrfToken', function (ctx, done) {
+      var key = 'foo';
+      var secret = 'csrfSecret';
+      var mockConfig = {
+        csrf: {
+          secret,
+          key
+        }
+      };
+
+      var app = mock(mockConfig, ctx.value);
+
+      /**
+       * Destroys the session secret.
+       *
+       * @param {String} req Express request object.
+       * @param {String} res Express response object.
+       * @param {Function} next Express next middleware callback.
+       */
+      function destroy(req, res, next) {
+        delete req.session[secret];
+
+        next();
+      }
+
+      /**
+       * Calls the CSRF token.
+       *
+       * @param {String} req Express request object.
+       * @param {String} res Express response object.
+       * @param {Function} next Express next middleware callback.
+       */
+      function callCsrfToken(req, res, next) {
+        var token = res.locals[key];
+
+        assert(req.csrfToken() !== token, 'req.csrfToken should not use cached token');
+        assert(res.locals[key] !== token, 'req.csrfToken should mutate token');
+
+        token = res.locals[key];
+
+        assert(req.csrfToken() === token, 'subsequent req.csrfToken should use cached token');
+
+        next();
+      }
+
+      app.get('/', destroy, callCsrfToken, (req, res) => {
+        res.status(200).send({
+          token: res.locals[key]
+        });
+      });
+
+      app.post('/', (req, res) => {
+        res.status(200).send({
+          token: res.locals[key]
+        });
+      });
+
+      request(app).get('/')
+        .end((err, res) => {
+          var obj = {};
+
+          obj[key] = res.body.token;
+
+          request(app).post('/')
+            .set('Cookie', mapCookies(res.headers['set-cookie']))
+            .send(obj)
+            .expect(200, done);
+        });
+    });
+  });
+
 });

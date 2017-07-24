@@ -1,47 +1,77 @@
-/*global describe:false, it:false */
 'use strict';
 
-
-var lusca = require('../index'),
-    request = require('supertest'),
-    assert = require('assert'),
-    mock = require('./mocks/app');
-
+const aegis = require('../index');
+const request = require('supertest');
+const assert = require('assert');
+const mock = require('./mocks/app');
 
 describe('XFRAME', function () {
 
-    it('method', function () {
-        assert(typeof lusca.xframe === 'function');
+  it('should be a function', function () {
+    assert(typeof aegis.xframe === 'function');
+  });
+
+  it('should respond with a DENY header', function (done) {
+    var config = {
+      xframe: 'DENY'
+    };
+
+    var app = mock(config);
+
+    app.get('/', (req, res) => {
+      res.status(200).end();
     });
 
+    request(app).get('/')
+      .expect('X-FRAME-OPTIONS', config.xframe)
+      .expect(200, done);
+  });
 
-    it('header (deny)', function (done) {
-        var config = { xframe: 'DENY' },
-            app = mock(config);
+  it('should respond with a SAMEORIGIN header', function (done) {
+    var config = {
+      xframe: 'SAMEORIGIN'
+    };
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+    var app = mock(config);
 
-        request(app)
-            .get('/')
-            .expect('X-FRAME-OPTIONS', config.xframe)
-            .expect(200, done);
+    app.get('/', (req, res) => {
+      res.status(200).end();
     });
 
+    request(app).get('/')
+      .expect('X-FRAME-OPTIONS', config.xframe)
+      .expect(200, done);
+  });
 
-    it('header (sameorigin)', function (done) {
-        var config = { xframe: 'SAMEORIGIN' },
-            app = mock(config);
+  describe('on concurrent requests', function () {
+    it('should respond with a DENY header', function (done) {
+      var config = {
+        xframe: 'DENY'
+      };
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+      var app = mock(config);
+      var concurrency = 100;
+      var completed = 0;
 
-        request(app)
-            .get('/')
-            .expect('X-FRAME-OPTIONS', config.xframe)
-            .expect(200, done);
+      app.get('/', (req, res) => {
+        res.status(200).end();
+      });
+
+      /**
+       * Done checker.
+       */
+      function checkIfDone() {
+        if (++completed === concurrency) {
+          done();
+        }
+      }
+
+      for (let i = 0, l = concurrency; i < l; i++) {
+        request(app).get('/')
+          .expect('X-FRAME-OPTIONS', config.xframe)
+          .expect(200, checkIfDone);
+      }
     });
+  });
 
 });

@@ -1,31 +1,30 @@
-/*global describe:false, it:false */
 'use strict';
 
-
-var lusca = require('../index'),
-    request = require('supertest'),
-    assert = require('assert'),
-    mock = require('./mocks/app');
-
-
+const aegis = require('../index');
+const request = require('supertest');
+const assert = require('assert');
+const mock = require('./mocks/app');
 
 describe('nosniff', function () {
 
-    it('method', function () {
-        assert(typeof lusca.nosniff === 'function');
+  it('should be a function', function () {
+    assert(typeof aegis.nosniff === 'function');
+  });
+
+  it('should respond an enabled header', function (done) {
+    var config = {
+      nosniff: true
+    };
+
+    var app = mock(config);
+
+    app.get('/', function (req, res) {
+      res.status(200).end();
     });
 
-    it('header (enabled)', function (done) {
-        var config = { nosniff: true },
-            app = mock(config);
+    request(app).get('/')
+      .expect('X-Content-Type-Options', 'nosniff')
+      .expect(200, done);
+  });
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
-
-        request(app)
-            .get('/')
-            .expect('X-Content-Type-Options', 'nosniff')
-            .expect(200, done);
-    });
 });

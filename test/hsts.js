@@ -1,101 +1,110 @@
 /*global describe:false, it:false */
 'use strict';
 
-
-var lusca = require('../index'),
-    request = require('supertest'),
-    assert = require('assert'),
-    mock = require('./mocks/app');
-
+const aegis = require('../index');
+const request = require('supertest');
+const assert = require('assert');
+const mock = require('./mocks/app');
 
 describe('HSTS', function () {
 
-    it('method', function () {
-        assert(typeof lusca.hsts === 'function');
+  it('should be a function', function () {
+    assert(typeof aegis.hsts === 'function');
+  });
+
+  it('should respond with a custom max age header value', function (done) {
+    var config = {
+      hsts: {
+        maxAge: 31536000
+      }
+    };
+
+    var app = mock(config);
+
+    app.get('/', function (req, res) {
+      res.status(200).end();
     });
 
+    request(app).get('/')
+      .expect('Strict-Transport-Security', `max-age=${ config.hsts.maxAge }`)
+      .expect(200, done);
+  });
 
-    it('header (maxAge)', function (done) {
-        var config = { hsts: { maxAge: 31536000 } },
-            app = mock(config);
+  it('should respond with a max age header value of 0', function (done) {
+    var config = {
+      hsts: {
+        maxAge: -3456356356
+      }
+    };
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+    var app = mock(config);
 
-        request(app)
-            .get('/')
-            .expect('Strict-Transport-Security', 'max-age=' + config.hsts.maxAge)
-            .expect(200, done);
+    app.get('/', function (req, res) {
+      res.status(200).end();
     });
 
+    request(app).get('/')
+      .expect('Strict-Transport-Security', `max-age=${ config.hsts.maxAge }`)
+      .expect(200, done);
+  });
 
-    it('header (maxAge 0)', function (done) {
-        var config = { hsts: { maxAge: 0 } },
-            app = mock(config);
+  it('should respond with a custom max age and include sub domains directive header value', function (done) {
+    var config = {
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true
+      }
+    };
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+    var app = mock(config);
 
-        request(app)
-            .get('/')
-            .expect('Strict-Transport-Security', 'max-age=' + config.hsts.maxAge)
-            .expect(200, done);
+    app.get('/', function (req, res) {
+      res.status(200).end();
     });
 
+    request(app).get('/')
+      .expect('Strict-Transport-Security', `max-age=${ config.hsts.maxAge }; includeSubDomains`)
+      .expect(200, done);
+  });
 
-    it('header (maxAge; includeSubDomains)', function (done) {
-        var config = { hsts: { maxAge: 31536000, includeSubDomains: true } },
-            app = mock(config);
+  it('should respond with a custom max age, include sub domains and preload directives header value', function (done) {
+    var config = {
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+      }
+    };
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+    var app = mock(config);
 
-        request(app)
-            .get('/')
-            .expect('Strict-Transport-Security', 'max-age=' + config.hsts.maxAge + '; includeSubDomains')
-            .expect(200, done);
+    app.get('/', function (req, res) {
+      res.status(200).end();
     });
 
+    request(app).get('/')
+      .expect('Strict-Transport-Security', `max-age=${ config.hsts.maxAge }; includeSubDomains; preload`)
+      .expect(200, done);
+  });
 
-    it('header (maxAge; includeSubDomains; preload)', function (done) {
-        var config = { hsts: { maxAge: 31536000, includeSubDomains: true, preload: true} },
-            app = mock(config);
+  it('should not respond with header value if max age is missing', function (done) {
+    var config = {
+      hsts: {}
+    };
 
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
+    var app = mock(config);
 
-        request(app)
-            .get('/')
-            .expect(
-                'Strict-Transport-Security',
-                'max-age=' + config.hsts.maxAge +
-                '; includeSubDomains' +
-                '; preload'
-            )
-            .expect(200, done);
+    app.get('/', function (req, res) {
+      res.status(200).end();
     });
 
+    request(app).get('/')
+      .expect(200)
+      .end(function (err, res) {
+        assert(res.headers['Strict-Transport-Security'] === undefined);
+        done(err);
+      });
 
-    it('header (missing maxAge)', function (done) {
-        var config = { hsts: {} },
-            app = mock(config);
-
-        app.get('/', function (req, res) {
-            res.status(200).end();
-        });
-
-        request(app)
-            .get('/')
-            .expect(200)
-            .end(function (err, res) {
-                assert(res.headers['Strict-Transport-Security'] === undefined);
-                done(err);
-            });
-
-    });
+  });
 
 });
