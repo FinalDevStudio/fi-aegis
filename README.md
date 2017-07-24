@@ -58,7 +58,7 @@ __Please note that you must use [express-session](https://github.com/expressjs/s
 ## API
 
 
-### Cross Site Request Forgery
+### Cross-Site Request Forgery
 
 ![Status](https://img.shields.io/badge/status-active-green.svg)
 
@@ -180,7 +180,7 @@ aegis.xframe(value);
 
 ![Status](https://img.shields.io/badge/status-suspended-yellow.svg)
 
-Enables [Platform for Privacy Preferences (P3P) Project](http://support.microsoft.com/kb/290333) headers.
+Enables [Platform for Privacy Preferences (P3P) Project](https://www.w3.org/P3P/Overview.html) headers.
 
 > The development of P3P has been suspended. This is still available in order to maintain compatibility. See [Platform for Privacy Preferences (P3P) Project](https://www.w3.org/P3P/Overview.html) on [W3C](https://www.w3.org) for more information.
 
