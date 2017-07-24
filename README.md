@@ -6,9 +6,9 @@
 
 ### Web Application Security Middleware
 
-This fork is based on [lusca](https://github.com/krakenjs/lusca)'s v1.4.1 but has changed greatly since.
+This fork is based on [lusca](https://github.com/krakenjs/lusca) [v1.4.1](https://github.com/krakenjs/lusca/releases/tag/v1.4.1) but has changed greatly since.
 
-The most relevant changes are minor optimizations, code refactoring and improved documentation.
+The most relevant changes are minor optimizations, code refactoring and improved documentation with the addition of some functionality.
 
 
 ## Usage
@@ -93,6 +93,8 @@ aegis.csrf(options);
 | `cookie.options` | `Object` | No | None | A valid Express cookie options object. See [Express response cookies](http://expressjs.com/en/4x/api.html#res.cookie) for more information. |
 | `header` | `String` | Yes (if `angular` is `false`) | None | If set, the header name you provide will be set with the CSRF token. |
 
+---
+
 
 ### Content Security Policy
 
@@ -158,6 +160,8 @@ Load images only through HTTPS and from self domain and upgrade all insecure req
 
 See [MDN CSP Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) for more examples and directives.
 
+---
+
 
 ### X-Frame-Options
 
@@ -181,28 +185,7 @@ aegis.xframe(value);
 |-------|------|----------|---------|-------------|
 | `value` | `String` | Yes | None | The value for the header, e.g. `DENY`, `SAMEORIGIN` or `ALLOW-FROM uri`. |
 
-
-### Platform for Privacy Preferences (P3P) Project
-
-![Status](https://img.shields.io/badge/status-suspended-yellow.svg)
-
-Enables [Platform for Privacy Preferences (P3P) Project](https://www.w3.org/P3P/Overview.html) headers.
-
-> The development of P3P has been suspended. This is still available in order to maintain compatibility. See [Platform for Privacy Preferences (P3P) Project](https://www.w3.org/P3P/Overview.html) on [W3C](https://www.w3.org) for more information.
-
-
-#### Usage:
-
-```js
-aegis.p3p(value);
-```
-
-
-#### Value:
-
-| Param | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `value` | `String` | Yes | None | The compact privacy policy. |
+---
 
 
 ### HTTP Strict Transport Security
@@ -229,6 +212,24 @@ aegis.hsts(options);
 | `includeSubDomains` | `Boolean` | No | None | Applies HSTS to all subdomains of the host. |
 | `preload` | `Boolean` | No | None | Adds preload flag. This is not part of the specification. See [this](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security#Preloading_Strict_Transport_Security) for more details about why. |
 
+---
+
+
+### X-Content-Type-Options
+
+![Status](https://img.shields.io/badge/status-active-green.svg)
+
+Enables [X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options) header to prevent MIME-sniffing a response away from the declared content-type.
+
+
+#### Usage:
+
+```js
+aegis.nosniff();
+```
+
+---
+
 
 ### X-XSS-Protection
 
@@ -251,17 +252,26 @@ aegis.xssProtection(options);
 | `enabled` | `Boolean` | No | `1` | If the header is enabled or not. |
 | `mode` | `String` | No | `block` | Mode to set on the header. |
 
+---
 
-### X-Content-Type-Options
+### Platform for Privacy Preferences (P3P) Project
 
-![Status](https://img.shields.io/badge/status-active-green.svg)
+![Status](https://img.shields.io/badge/status-suspended-yellow.svg)
 
-Enables [X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options) header to prevent MIME-sniffing a response away from the declared content-type.
+Enables [Platform for Privacy Preferences (P3P) Project](https://www.w3.org/P3P/Overview.html) headers.
+
+> The development of P3P has been suspended. This is still available in order to maintain compatibility. See [Platform for Privacy Preferences (P3P) Project](https://www.w3.org/P3P/Overview.html) on [W3C](https://www.w3.org) for more information.
 
 
 #### Usage:
 
 ```js
-aegis.nosniff();
+aegis.p3p(value);
 ```
 
+
+#### Value:
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `value` | `String` | Yes | None | The compact privacy policy. |
