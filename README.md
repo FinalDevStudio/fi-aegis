@@ -1,31 +1,35 @@
-# lusca
+# Fi Aegis [![Build Status](https://travis-ci.org/FinalDevStudio/fi-aegis.svg?branch=master)](https://travis-ci.org/FinalDevStudio/fi-aegis)
 
-[![Build Status](https://travis-ci.org/krakenjs/lusca.svg?branch=master)](https://travis-ci.org/krakenjs/lusca) [![NPM version](https://badge.fury.io/js/lusca.svg)](http://badge.fury.io/js/lusca)  
 
-Web application security middleware.
+### Web Application Security Middleware
 
 
 ## Usage
 
 ```js
-var express = require('express'),
-	app = express(),
-	session = require('express-session'),
-	lusca = require('lusca');
+const session = require('express-session');
+const express = require('express');
+const aegis = require('fi-aegis');
 
-//this or other session management will be required
+const app = express();
+
+/* This or other session management will be required */
 app.use(session({
 	secret: 'abc',
 	resave: true,
 	saveUninitialized: true
 }));
 
-app.use(lusca({
+app.use(aegis({
     csrf: true,
-    csp: { /* ... */},
+    csp: {/* ... */},
     xframe: 'SAMEORIGIN',
     p3p: 'ABCDEF',
-    hsts: {maxAge: 31536000, includeSubDomains: true, preload: true},
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
     xssProtection: true,
     nosniff: true
 }));
@@ -35,7 +39,7 @@ Setting any value to `false` will disable it. Alternately, you can opt into meth
 
 ```js
 app.use(lusca.csrf());
-app.use(lusca.csp({ /* ... */}));
+app.use(lusca.csp({/* ... */}));
 app.use(lusca.xframe('SAMEORIGIN'));
 app.use(lusca.p3p('ABCDEF'));
 app.use(lusca.hsts({ maxAge: 31536000 }));
@@ -43,13 +47,13 @@ app.use(lusca.xssProtection(true));
 app.use(lusca.nosniff());
 ```
 
-__Please note that you must use [express-session](https://github.com/expressjs/session), [cookie-session](https://github.com/expressjs/cookie-session), their express 3.x alternatives, or other session object management in order to use lusca.__
+__Please note that you must use [express-session](https://github.com/expressjs/session), [cookie-session](https://github.com/expressjs/cookie-session), their express 3.x alternatives, or other session object management in order to use Fi Wasm.__
 
 
 ## API
 
 
-### lusca.csrf(options)
+### aegis.csrf(options)
 
 * `key` String - Optional. The name of the CSRF token added to the model. Defaults to `_csrf`.
 * `secret` String - Optional. The key to place on the session object which maps to the server side token. Defaults to `_csrfSecret`.
