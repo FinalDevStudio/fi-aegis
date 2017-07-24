@@ -1,1 +1,3 @@
-{ "policy": "default-src *" }
+{
+  "policy": "default-src *"
+}

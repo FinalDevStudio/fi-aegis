@@ -1,37 +1,39 @@
 'use strict';
 
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const errorHandler = require('errorhandler');
+const aegis = require('../..');
 
-var express = require('express'),
-	cookieParser = require('cookie-parser'),
-	cookieSession = require('cookie-session'),
-	session = require('express-session'),
-	bodyParser = require('body-parser'),
-	errorHandler = require('errorhandler'),
-	lusca = require('../..');
+module.exports = (config, sessionType) => {
+  var app = express();
 
+  app.use(cookieParser());
 
-module.exports = function (config, sessionType) {
-	var app = express();
+  if (sessionType === undefined || sessionType === 'session') {
+    app.use(session({
+      secret: 'abc',
+      resave: true,
+      saveUninitialized: true
+    }));
+  } else if (sessionType === 'cookie') {
+    app.use(cookieSession({
+      secret: 'abc'
+    }));
+  }
 
-	app.use(cookieParser());
-	if (sessionType === undefined || sessionType === 'session') {
-		app.use(session({
-			secret: 'abc',
-			resave: true,
-			saveUninitialized: true
-		}));
-	} else if (sessionType === "cookie") {
-		app.use(cookieSession({
-			secret: 'abc'
-		}));
-	}
+  app.use(bodyParser.json());
 
-	app.use(bodyParser.json());
-	app.use(bodyParser.urlencoded({
-		extended: false
-	}));
-	(config !== undefined) ? app.use(lusca(config)) : console.log('no lusca');
-	app.use(errorHandler());
+  app.use(bodyParser.urlencoded({
+    extended: false
+  }));
 
-	return app;
+  (config !== undefined) ? app.use(aegis(config)): console.log('No Fi Aegis!');
+
+  app.use(errorHandler());
+
+  return app;
 };
