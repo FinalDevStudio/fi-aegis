@@ -22,7 +22,9 @@ app.use(session({
 
 app.use(aegis({
     csrf: true,
-    csp: {/* ... */},
+    csp: {
+      angular: true
+    },
     xframe: 'SAMEORIGIN',
     p3p: 'ABCDEF',
     hsts: {
@@ -38,13 +40,13 @@ app.use(aegis({
 Setting any value to `false` will disable it. Alternately, you can opt into methods one by one:
 
 ```js
-app.use(lusca.csrf());
-app.use(lusca.csp({/* ... */}));
-app.use(lusca.xframe('SAMEORIGIN'));
-app.use(lusca.p3p('ABCDEF'));
-app.use(lusca.hsts({ maxAge: 31536000 }));
-app.use(lusca.xssProtection(true));
-app.use(lusca.nosniff());
+app.use(aegis.csrf());
+app.use(aegis.csp({ angular: true }));
+app.use(aegis.xframe('SAMEORIGIN'));
+app.use(aegis.p3p('ABCDEF'));
+app.use(aegis.hsts({ maxAge: 31536000 }));
+app.use(aegis.xssProtection(true));
+app.use(aegis.nosniff());
 ```
 
 __Please note that you must use [express-session](https://github.com/expressjs/session), [cookie-session](https://github.com/expressjs/cookie-session), their express 3.x alternatives, or other session object management in order to use Fi Wasm.__
@@ -53,37 +55,64 @@ __Please note that you must use [express-session](https://github.com/expressjs/s
 ## API
 
 
-### aegis.csrf(options)
-
-* `key` String - Optional. The name of the CSRF token added to the model. Defaults to `_csrf`.
-* `secret` String - Optional. The key to place on the session object which maps to the server side token. Defaults to `_csrfSecret`.
-* `impl` Function - Optional. Custom implementation to generate a token.
-* `cookie` String - Optional. If set, a cookie with the name you provide will be set with the CSRF token.
-* `angular` Boolean - Optional. Shorthand setting to set `lusca` up to use the default settings for CSRF validation according to the [AngularJS docs].
-
-[angularjs docs]: https://docs.angularjs.org/api/ng/service/$http#cross-site-request-forgery-xsrf-protection
+### Cross Site Request Forgery
 
 Enables [Cross Site Request Forgery](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_\(CSRF\)) (CSRF) headers.
 
 If enabled, the CSRF token must be in the payload when modifying data or you will receive a *403 Forbidden*. To send the token you'll need to echo back the `_csrf` value you received from the previous request.
 
-Furthermore, parsers must be registered before lusca.
+Furthermore, parsers must be registered before **Fi Aegis**.
 
-### lusca.csp(options)
 
-* `options.policy` String, Object, or an Array - Object definition of policy. Valid policies examples include:
-  * `{"default-src": "*"}`
-  * `"referrer no-referrer"`
-  * `[{ "img-src": "'self' http:" }, "block-all-mixed-content"]`
-* `options.reportOnly` Boolean - Enable report only mode.
-* `options.reportUri` String - URI where to send the report data
+#### Usage:
+
+```js
+aegis.csrf(options);
+```
+
+
+#### Options:
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `key` | `String` | No | `_csrf` | The name of the CSRF token added to the model. |
+| `secret` | `String` | No | `_csrfSecret` | The key to place on the session object which maps to the server side token. |
+| `impl` | `Function` | No | See [lib/token.js](https://github.com/FinalDevStudio/fi-aegis/blob/master/lib/token.js). | Custom implementation to generate a token.
+| `angular` | `Boolean` | No | `false` | Shorthand setting to set **Fi Aegis** up to use the default settings for CSRF validation according to the [AngularJS docs](https://docs.angularjs.org/api/ng/service/$http#cross-site-request-forgery-xsrf-protection). |
+| `cookie` | `String` | Yes (if `angular` is `false`) | None | If set, a cookie with the name you provide will be set with the CSRF token. |
+| `header` | `String` | Yes (if `angular` is `false`) | None | If set, the header name you provide will be set with the CSRF token. |
+
+
+### Content Security Policy
 
 Enables [Content Security Policy](https://www.owasp.org/index.php/Content_Security_Policy) (CSP) headers.
 
-#### Example Options
+See the [MDN CSP usage](https://developer.mozilla.org/en-US/docs/Web/Security/CSP/Using_Content_Security_Policy) page for more information on available policy options.
+
+See the [AngularJS ngCsp directive docs](https://docs.angularjs.org/api/ng/directive/ngCsp) to learn the how to implement it when using CSP on your server.
+
+
+#### Usage:
 
 ```js
-// Everything but images can only come from own domain (excluding subdomains)
+aegis.csp(options);
+```
+
+
+#### Options:
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `policy` | `String`, `Object` or `Array` | Yes | Empty | Object definition of policy. Valid policies examples include. |
+| `reportOnly` | `Boolean` | No | `false` | Enable report only mode. |
+| `reportUri` | `String` | No | Empty | URI where to send the report data |
+
+
+#### Example Options:
+
+Everything but images can only come from own domain (excluding subdomains):
+
+```js
 {
   policy: {
     'default-src': '\'self\'',
@@ -92,41 +121,117 @@ Enables [Content Security Policy](https://www.owasp.org/index.php/Content_Securi
 }
 ```
 
-See the [MDN CSP usage](https://developer.mozilla.org/en-US/docs/Web/Security/CSP/Using_Content_Security_Policy) page for more information on available policy options.
+Pre-existing site that uses too much inline code to fix but wants to ensure resources are loaded only over https and disable plugins:
 
-### lusca.xframe(value)
+```js
+{
+  policy: 'default-src https: \'unsafe-inline\'; object-src \'none\''
+}
+```
 
-* `value` String - Required. The value for the header, e.g. DENY, SAMEORIGIN or ALLOW-FROM uri.
+Load images only through HTTPS and from self domain and upgrade all insecure requests:
+
+```js
+{
+  policy: [
+    {
+      'img-src': '\'self\' https:'
+    },
+
+    'upgrade-insecure-requests'
+  ]
+}
+```
+
+See [MDN CSP Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) for more examples and directives.
+
+
+### X-Frame-Options
 
 Enables X-FRAME-OPTIONS headers to help prevent [Clickjacking](https://www.owasp.org/index.php/Clickjacking).
 
+See [MDN X-Frame-Options docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) to learn more about it.
 
 
-### lusca.p3p(value)
+#### Usage:
 
-* `value` String - Required. The compact privacy policy.
+```js
+aegis.xframe(value);
+```
 
-Enables [Platform for Privacy Preferences Project](http://support.microsoft.com/kb/290333) (P3P) headers.
+
+#### Value:
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `value` | `String` | Yes | None | The value for the header, e.g. `DENY`, `SAMEORIGIN` or `ALLOW-FROM uri`. |
 
 
+### **[Deprecated]** Platform for Privacy Preferences (P3P) Project
 
-### lusca.hsts(options)
+Enables [Platform for Privacy Preferences (P3P) Project](http://support.microsoft.com/kb/290333) headers.
 
-* `options.maxAge` Number - Required. Number of seconds HSTS is in effect.
-* `options.includeSubDomains` Boolean - Optional. Applies HSTS to all subdomains of the host
-* `options.preload` Boolean - Optional. Adds preload flag
+> The development of P3P has been suspended. This is still available in order to maintain compatibility. See [Platform for Privacy Preferences (P3P) Project](https://www.w3.org/P3P/Overview.html) on [W3C](https://www.w3.org) for more information.
+
+
+#### Usage:
+
+```js
+aegis.p3p(value);
+```
+
+
+#### Value:
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `value` | `String` | Yes | None | The compact privacy policy. |
+
+
+### HTTP Strict Transport Security
+
 
 Enables [HTTP Strict Transport Security](https://www.owasp.org/index.php/HTTP_Strict_Transport_Security) for the host domain. The preload flag is required for HSTS domain submissions to [Chrome's HSTS preload list](https://hstspreload.appspot.com).
 
-
-### lusca.xssProtection(options)
-
-* `options.enabled` Boolean - Optional. If the header is enabled or not (see header docs). Defaults to `1`.
-* `options.mode` String - Optional. Mode to set on the header (see header docs). Defaults to `block`.
-
-Enables [X-XSS-Protection](http://blogs.msdn.com/b/ie/archive/2008/07/02/ie8-security-part-iv-the-xss-filter.aspx) headers to help prevent cross site scripting (XSS) attacks in older IE browsers (IE8)
+See [MDN Strict-Transport-Security](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security) for more information.
 
 
-### lusca.nosniff()
+#### Usage:
+
+```js
+aegis.hsts(options);
+```
+
+
+#### Options:
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `maxAge` | `Number` | Yes | None | Number of seconds HSTS is in effect. |
+| `includeSubDomains` | `Boolean` | No | None | Applies HSTS to all subdomains of the host. |
+| `preload` | `Boolean` | No | None | Adds preload flag. This is not part of the specification. See [this](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security#Preloading_Strict_Transport_Security) for more details about why. |
+
+
+### X-XSS-Protection
+
+Enables [X-XSS-Protection](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection) headers to help prevent cross site scripting (XSS) attacks in older IE browsers (IE8).
+
+
+#### Usage:
+
+```js
+aegis.xssProtection(options);
+```
+
+#### Options:
+
+| Param | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `enabled` | `Boolean` | No | `1` | If the header is enabled or not. |
+| `mode` | `String` | No | `block` | Mode to set on the header. |
+
+
+
+### aegis.nosniff()
 
 Enables [X-Content-Type-Options](https://blogs.msdn.microsoft.com/ie/2008/09/02/ie8-security-part-vi-beta-2-update/) header to prevent MIME-sniffing a response away from the declared content-type.
