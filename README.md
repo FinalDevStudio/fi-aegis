@@ -18,25 +18,25 @@ const app = express();
 
 /* This or other session management will be required */
 app.use(session({
-	secret: 'abc',
-	resave: true,
-	saveUninitialized: true
+  secret: 'abc',
+  resave: true,
+  saveUninitialized: true
 }));
 
 app.use(aegis({
-    csrf: true,
-    csp: {
-      angular: true
-    },
-    xframe: 'SAMEORIGIN',
-    p3p: 'ABCDEF', /*[DEPRECATED]*/
-    hsts: {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true
-    },
-    xssProtection: true,
-    nosniff: true
+  csrf: true,
+  csp: {
+    angular: true
+  },
+  xframe: 'SAMEORIGIN',
+  p3p: 'ABCDEF', /*[DEPRECATED]*/
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  xssProtection: true,
+  nosniff: true
 }));
 ```
 
