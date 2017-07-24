@@ -1,4 +1,7 @@
-# Fi Aegis [![Build Status](https://travis-ci.org/FinalDevStudio/fi-aegis.svg?branch=master)](https://travis-ci.org/FinalDevStudio/fi-aegis)
+# Fi Aegis
+
+[![Build Status](https://travis-ci.org/FinalDevStudio/fi-aegis.svg?branch=master)](https://travis-ci.org/FinalDevStudio/fi-aegis)
+[![npm version](https://badge.fury.io/js/fi-aegis.svg)](https://badge.fury.io/js/fi-aegis)
 
 
 ### Web Application Security Middleware
@@ -57,6 +60,8 @@ __Please note that you must use [express-session](https://github.com/expressjs/s
 
 ### Cross Site Request Forgery
 
+![Status](https://img.shields.io/badge/status-active-green.svg)
+
 Enables [Cross Site Request Forgery](https://www.owasp.org/index.php/Cross-Site_Request_Forgery_\(CSRF\)) (CSRF) headers.
 
 If enabled, the CSRF token must be in the payload when modifying data or you will receive a *403 Forbidden*. To send the token you'll need to echo back the `_csrf` value you received from the previous request.
@@ -84,6 +89,8 @@ aegis.csrf(options);
 
 
 ### Content Security Policy
+
+![Status](https://img.shields.io/badge/status-active-green.svg)
 
 Enables [Content Security Policy](https://www.owasp.org/index.php/Content_Security_Policy) (CSP) headers.
 
@@ -148,6 +155,8 @@ See [MDN CSP Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/
 
 ### X-Frame-Options
 
+![Status](https://img.shields.io/badge/status-active-green.svg)
+
 Enables X-FRAME-OPTIONS headers to help prevent [Clickjacking](https://www.owasp.org/index.php/Clickjacking).
 
 See [MDN X-Frame-Options docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) to learn more about it.
@@ -167,7 +176,9 @@ aegis.xframe(value);
 | `value` | `String` | Yes | None | The value for the header, e.g. `DENY`, `SAMEORIGIN` or `ALLOW-FROM uri`. |
 
 
-### **[Deprecated]** Platform for Privacy Preferences (P3P) Project
+### Platform for Privacy Preferences (P3P) Project
+
+![Status](https://img.shields.io/badge/status-suspended-yellow.svg)
 
 Enables [Platform for Privacy Preferences (P3P) Project](http://support.microsoft.com/kb/290333) headers.
 
@@ -190,6 +201,7 @@ aegis.p3p(value);
 
 ### HTTP Strict Transport Security
 
+![Status](https://img.shields.io/badge/status-active-green.svg)
 
 Enables [HTTP Strict Transport Security](https://www.owasp.org/index.php/HTTP_Strict_Transport_Security) for the host domain. The preload flag is required for HSTS domain submissions to [Chrome's HSTS preload list](https://hstspreload.appspot.com).
 
@@ -214,6 +226,8 @@ aegis.hsts(options);
 
 ### X-XSS-Protection
 
+![Status](https://img.shields.io/badge/status-obsolete-lightgrey.svg)
+
 Enables [X-XSS-Protection](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection) headers to help prevent cross site scripting (XSS) attacks in older IE browsers (IE8).
 
 
@@ -233,6 +247,8 @@ aegis.xssProtection(options);
 
 
 ### X-Content-Type-Options
+
+![Status](https://img.shields.io/badge/status-active-green.svg)
 
 Enables [X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options) header to prevent MIME-sniffing a response away from the declared content-type.
 
