@@ -10,6 +10,23 @@ This fork is based on [lusca](https://github.com/krakenjs/lusca) [v1.4.1](https:
 
 The most relevant changes are minor optimizations, code refactoring and improved documentation with the addition of some functionality.
 
+---
+
+
+## Installation
+
+**Fi Aegis** is available only as an [NPM](https://www.npmjs.org) package.
+
+Install using:
+
+```
+npm install fi-aegis
+```
+
+Remember to add the `--save` modifier if you're using an NPM version lower than `5.x.x`.
+
+---
+
 
 ## Usage
 
@@ -57,6 +74,8 @@ app.use(aegis.nosniff());
 ```
 
 __Please note that you must use [express-session](https://github.com/expressjs/session), [cookie-session](https://github.com/expressjs/cookie-session), their express 3.x alternatives, or other session object management in order to use Fi Aegis.__
+
+---
 
 
 ## API
