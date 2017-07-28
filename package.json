@@ -2,31 +2,25 @@
   "name": "fi-aegis",
   "version": "1.0.0",
   "description": "Web Application Security Middleware.",
+  "author": "Jeff Harrell <jeharrell@paypal.com>",
+  "homepage": "https://github.com/finaldevstudio/fi-aegis",
   "main": "index",
+  "license": "MIT",
   "scripts": {
-    "test": "./node_modules/.bin/mocha test"
+    "test": "node_modules/.bin/mocha test"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/krakenjs/lusca.git"
+    "url": "git+https://github.com/finaldevstudio/fi-aegis.git"
   },
-  "author": {
-    "name": "Jeff Harrell",
-    "email": "jeharrell@paypal.com"
-  },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
-  },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-    }
+  "contributors": [
+    "Santiago G. Marín <santiago@finaldevstudio.com>"
   ],
   "engines": {
-    "node": ">=4.x.x"
+    "node": ">=4.0.0",
+    "npm": ">=3.0.0"
   },
-  "engineStrict": true,
+  "dependencies": {},
   "devDependencies": {
     "body-parser": "^1.6.3",
     "cookie-parser": "^1.3.2",
@@ -38,5 +32,26 @@
     "mocha": "^3.4.2",
     "supertest": "^3.0.0"
   },
-  "dependencies": {}
+  "bugs": {
+    "url": "https://github.com/finaldevstudio/fi-aegis/issues",
+    "email": "security@finaldevstudio.com"
+  },
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [
+    "web",
+    "application",
+    "security",
+    "middleware",
+    "express",
+    "csrf",
+    "xsrf",
+    "xframe",
+    "csp",
+    "xss",
+    "hsts",
+    "nosniff"
+  ]
 }
