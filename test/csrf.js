@@ -469,7 +469,7 @@ describe('CSRF', function () {
       });
 
       request(app).get('/')
-        .end(function (err, res) {
+        .end((err, res) => {
           var obj = {};
           obj[key] = res.body.token;
 
