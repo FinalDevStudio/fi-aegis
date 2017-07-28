@@ -1,19 +1,20 @@
 'use strict';
 
-const express = require('express');
-const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
+const cookieParser = require('cookie-parser');
+const errorHandler = require('errorhandler');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const errorHandler = require('errorhandler');
+const express = require('express');
 const aegis = require('../..');
 
 module.exports = (config, sessionType) => {
+
   var app = express();
 
   app.use(cookieParser());
 
-  if (sessionType === undefined || sessionType === 'session') {
+  if (!sessionType || sessionType === 'session') {
     app.use(session({
       secret: 'abc',
       resave: true,
@@ -31,9 +32,14 @@ module.exports = (config, sessionType) => {
     extended: false
   }));
 
-  (config !== undefined) ? app.use(aegis(config)): console.log('No Fi Aegis!');
+  if (config) {
+    app.use(aegis(config));
+  } else {
+    console.warn('No Fi Aegis!');
+  }
 
   app.use(errorHandler());
 
   return app;
+
 };

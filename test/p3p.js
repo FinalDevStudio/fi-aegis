@@ -18,7 +18,7 @@ describe('P3P', function () {
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 

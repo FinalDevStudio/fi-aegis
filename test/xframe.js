@@ -44,6 +44,7 @@ describe('XFRAME', function () {
   });
 
   describe('on concurrent requests', function () {
+
     it('should respond with a DENY header', function (done) {
       var config = {
         xframe: 'DENY'
@@ -72,6 +73,7 @@ describe('XFRAME', function () {
           .expect(200, checkIfDone);
       }
     });
+
   });
 
 });

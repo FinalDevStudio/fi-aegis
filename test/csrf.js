@@ -1,10 +1,10 @@
 'use strict';
 
-const aegis = require('../index');
 const request = require('supertest');
-const assert = require('assert');
 const mock = require('./mocks/app');
+const aegis = require('../index');
 const dd = require('data-driven');
+const assert = require('assert');
 
 const ERR = require('../lib/errors');
 
@@ -22,9 +22,7 @@ const sessionOptions = [{
  * @returns {String} Mapped cookies.
  */
 function mapCookies(cookies) {
-  return cookies.map(function (r) {
-    return r.replace('; path=/; httponly', '');
-  }).join('; ');
+  return cookies.map(r => r.replace('; path=/; httponly', '')).join('; ');
 }
 
 describe('CSRF', function () {
@@ -53,6 +51,7 @@ describe('CSRF', function () {
   });
 
   dd(sessionOptions, function () {
+
     it('GETs have a CSRF token (session type: {value})', function (ctx, done) {
       var mockConfig = (ctx.value === 'cookie') ? {
         csrf: {
@@ -106,6 +105,7 @@ describe('CSRF', function () {
     });
 
     describe('concurrent requests', function () {
+
       it('POST (200 OK with token) (session type: {value})', function (ctx, done) {
         var mockConfig = (ctx.value === 'cookie') ? {
           csrf: {
@@ -145,6 +145,7 @@ describe('CSRF', function () {
           });
         }
       });
+
     });
 
     it('POST (403 Forbidden on invalid token) (session type: {value})', function (ctx, done) {
@@ -370,7 +371,6 @@ describe('CSRF', function () {
           assert(myToken.value === res.body.token);
 
           request(app).post('/')
-            //.set('cookie', mapCookies(res.headers['set-cookie']))
             .send({
               _csrf: res.body.token
             })
@@ -393,21 +393,9 @@ describe('CSRF', function () {
     });
 
     request(app).get('/')
-      .end(function (err, res) {
-        /**
-         * Finds the token value inside a cookie.
-         *
-         * @param {String} cookie The cookie string.
-         *
-         * @returns {String} The token value.
-         */
-        function findToken(cookie) {
-          cookie = decodeURIComponent(cookie);
-
-          return ~cookie.indexOf(res.body.token);
-        }
-
-        assert(res.headers['set-cookie'].some(findToken));
+      .end((err, res) => {
+        assert(res.headers['set-cookie'].some(cookie => ~decodeURIComponent(cookie)
+          .indexOf(res.body.token)));
 
         done();
       });
@@ -431,20 +419,8 @@ describe('CSRF', function () {
 
     request(app).get('/')
       .end(function (err, res) {
-        /**
-         * Finds the token value inside a cookie.
-         *
-         * @param {String} cookie The cookie string.
-         *
-         * @returns {String} The token value.
-         */
-        function findToken(cookie) {
-          cookie = decodeURIComponent(cookie);
-
-          return ~cookie.indexOf(cookieKey + '=' + res.body.token);
-        }
-
-        assert(res.headers['set-cookie'].some(findToken));
+        assert(res.headers['set-cookie'].some(cookie => ~decodeURIComponent(cookie)
+          .indexOf(cookieKey + '=' + res.body.token)));
 
         request(app).post('/')
           .set('cookie', mapCookies(res.headers['set-cookie']))
@@ -457,6 +433,7 @@ describe('CSRF', function () {
   });
 
   dd(sessionOptions, function () {
+
     it('Should return the cached token for valid session on req.csrfToken', function (ctx, done) {
       var key = 'foo';
       var mockConfig = (ctx.value === 'cookie') ? {
@@ -472,23 +449,14 @@ describe('CSRF', function () {
 
       var app = mock(mockConfig, ctx.value);
 
-      /**
-       * Calls the CSRF token.
-       *
-       * @param {String} req Express request object.
-       * @param {String} res Express response object.
-       * @param {Function} next Express next middleware callback.
-       */
-      function callCsrfToken(req, res, next) {
+      app.get('/', (req, res, next) => {
         var token = res.locals[key];
 
         assert(req.csrfToken() === token, 'req.csrfToken should use cached token');
         assert(res.locals[key] === token, 'req.csrfToken should not mutate token');
 
         next();
-      }
-
-      app.get('/', callCsrfToken, (req, res) => {
+      }, (req, res) => {
         res.status(200).send({
           token: res.locals[key]
         });
@@ -537,14 +505,7 @@ describe('CSRF', function () {
         next();
       }
 
-      /**
-       * Calls the CSRF token.
-       *
-       * @param {String} req Express request object.
-       * @param {String} res Express response object.
-       * @param {Function} next Express next middleware callback.
-       */
-      function callCsrfToken(req, res, next) {
+      app.get('/', destroy, (req, res, next) => {
         var token = res.locals[key];
 
         assert(req.csrfToken() !== token, 'req.csrfToken should not use cached token');
@@ -555,9 +516,7 @@ describe('CSRF', function () {
         assert(req.csrfToken() === token, 'subsequent req.csrfToken should use cached token');
 
         next();
-      }
-
-      app.get('/', destroy, callCsrfToken, (req, res) => {
+      }, (req, res) => {
         res.status(200).send({
           token: res.locals[key]
         });
@@ -581,6 +540,7 @@ describe('CSRF', function () {
             .expect(200, done);
         });
     });
+
   });
 
 });

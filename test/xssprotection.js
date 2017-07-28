@@ -1,9 +1,9 @@
 'use strict';
 
-const aegis = require('../index');
 const request = require('supertest');
-const assert = require('assert');
 const mock = require('./mocks/app');
+const aegis = require('../index');
+const assert = require('assert');
 
 describe('xssProtection', function () {
 

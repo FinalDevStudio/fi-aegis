@@ -16,7 +16,7 @@ describe('Fi Aegis', function () {
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 

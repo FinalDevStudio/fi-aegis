@@ -1,15 +1,13 @@
 'use strict';
 
-var tokenModule = module.exports = {
+var value = 'tokenAllTheThings';
 
-  value: 'tokenAllTheThings',
+module.exports = {
 
-  create: () => {
-    return tokenModule.value;
-  },
+  create: () => value,
 
-  validate: (req, token) => {
-    return token === tokenModule.value;
-  }
+  validate: (req, token) => token === value,
+
+  value
 
 };

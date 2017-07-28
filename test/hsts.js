@@ -1,10 +1,9 @@
-/*global describe:false, it:false */
 'use strict';
 
-const aegis = require('../index');
 const request = require('supertest');
-const assert = require('assert');
 const mock = require('./mocks/app');
+const aegis = require('../index');
+const assert = require('assert');
 
 describe('HSTS', function () {
 
@@ -21,7 +20,7 @@ describe('HSTS', function () {
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 
@@ -39,7 +38,7 @@ describe('HSTS', function () {
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 
@@ -58,7 +57,7 @@ describe('HSTS', function () {
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 
@@ -70,15 +69,15 @@ describe('HSTS', function () {
   it('should respond with a custom max age, include sub domains and preload directives header value', function (done) {
     var config = {
       hsts: {
-        maxAge: 31536000,
         includeSubDomains: true,
+        maxAge: 31536000,
         preload: true
       }
     };
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 
@@ -94,7 +93,7 @@ describe('HSTS', function () {
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 

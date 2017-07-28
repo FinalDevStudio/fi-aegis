@@ -1,7 +1,5 @@
 'use strict';
 
-var cspPolicy = require('./cspReport');
-
 module.exports = {
 
   csrf: true,
@@ -14,7 +12,7 @@ module.exports = {
     maxAge: 31536000
   },
 
-  csp: cspPolicy,
+  csp: require('./cspReport'),
 
   xssProtection: true,
 

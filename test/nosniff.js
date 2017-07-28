@@ -1,9 +1,9 @@
 'use strict';
 
-const aegis = require('../index');
 const request = require('supertest');
-const assert = require('assert');
 const mock = require('./mocks/app');
+const aegis = require('../index');
+const assert = require('assert');
 
 describe('nosniff', function () {
 
@@ -18,7 +18,7 @@ describe('nosniff', function () {
 
     var app = mock(config);
 
-    app.get('/', function (req, res) {
+    app.get('/', (req, res) => {
       res.status(200).end();
     });
 
