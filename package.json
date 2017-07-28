@@ -1,6 +1,6 @@
 {
   "name": "fi-aegis",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Web Application Security Middleware.",
   "author": "Jeff Harrell <jeharrell@paypal.com>",
   "homepage": "https://github.com/finaldevstudio/fi-aegis",
