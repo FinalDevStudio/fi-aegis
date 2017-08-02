@@ -1,14 +1,38 @@
 'use strict';
 
+/**
+ * Fi Aegis.
+ *
+ * @module fi-aegis
+ *
+ * @see module:fi-aegis
+ */
+
+/**
+ * Configures the module.
+ *
+ * @param {Object} options The options object.
+ * @param {Object} options.csp The options for the `csp` module.
+ * @param {Object} options.csrf The options for the `csrf` module.
+ * @param {Object} options.hsts The options for the `hsts` module.
+ * @param {Boolean} options.nosniff Whether to activate the `nosniff` module.
+ * @param {String} options.p3p The header value for the `p3p` module.
+ * @param {String} options.xframes The header value for the `xframe` module.
+ * @param {Object} options.xssprotection The options for the `xssprotection`
+ * module.
+ *
+ * @returns {Function} The Express middleware.
+ */
 var aegis = module.exports = options => {
-  var headers = [];
+
+  const components = [];
 
   if (options) {
     Object.keys(aegis).forEach(key => {
-      var config = options[key];
+      let config = options[key];
 
       if (config) {
-        headers.push(aegis[key](config));
+        components.push(aegis[key](config));
       }
     });
   }
@@ -23,15 +47,13 @@ var aegis = module.exports = options => {
   function middleware(req, res, next) {
     var chain = next;
 
-    headers.forEach(header => {
-      chain = (next => {
-        return err => {
-          if (err) {
-            return next(err);
-          }
+    components.forEach(component => {
+      chain = (next => err => {
+        if (err) {
+          return next(err);
+        }
 
-          header(req, res, next);
-        };
+        component(req, res, next);
       })(chain);
     });
 
@@ -39,6 +61,7 @@ var aegis = module.exports = options => {
   }
 
   return middleware;
+
 };
 
 aegis.csrf = require('./lib/csrf');
