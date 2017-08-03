@@ -12,20 +12,22 @@ describe('Fi Aegis', function () {
   });
 
   it('should set all headers', function (done) {
-    var config = require('./mocks/config/all');
+    const config = require('./mocks/config/all');
 
-    var app = mock(config);
+    const app = mock(config);
 
     app.get('/', (req, res) => {
       res.status(200).end();
     });
 
     request(app).get('/')
-      .expect('X-FRAME-OPTIONS', config.xframe)
-      .expect('P3P', config.p3p)
-      .expect('Strict-Transport-Security', `max-age=${ config.hsts.maxAge }`)
-      .expect('Content-Security-Policy-Report-Only', `default-src *; report-uri ${ config.csp.reportUri }`)
-      .expect('X-XSS-Protection', '1; mode=block')
+      .expect('Content-Security-Policy-Report-Only', `default-src *; report-uri ${ config.csp.reportUri }`) // csp
+      .expect('Set-Cookie', /.*CSRF-TOKEN=.*/) // csrf
+      .expect('Strict-Transport-Security', `max-age=${ config.hsts.maxAge }`) // hsts
+      .expect('X-Content-Type-Options', 'nosniff') // nosniff
+      .expect('P3P', config.p3p) // p3p
+      .expect('X-FRAME-OPTIONS', config.xframe) // xframe
+      .expect('X-XSS-Protection', '1; mode=block') // xssprotection
       .expect(200, done);
   });
 
