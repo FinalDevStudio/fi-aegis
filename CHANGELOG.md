@@ -1,3 +1,10 @@
+#### v1.1.0
+
+* Added CSRF `safeVerbs` option.
+* Multiple code improvements.
+* Improved code docs.
+
+
 #### v1.0.2
 
 * Multiple code optimizations (610fec5e44c2a97c1a3cfd03a59a08487be4b1bc).
