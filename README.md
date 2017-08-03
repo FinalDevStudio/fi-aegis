@@ -101,9 +101,9 @@ aegis.csrf(options);
 | `secret` | `String` | No | `_csrfSecret` | The key to place on the session object which maps to the server side token. |
 | `impl` | `Function` | No | See [lib/token.js](https://github.com/FinalDevStudio/fi-aegis/blob/master/lib/token.js). | Custom implementation to generate a token.
 | `angular` | `Boolean` | No | `false` | Shorthand setting to set **Fi Aegis** up to use the default settings for CSRF validation according to the [AngularJS docs](https://docs.angularjs.org/api/ng/service/$http#cross-site-request-forgery-xsrf-protection). |
-| `cookie` | `String` or `Object` | No | `Object` | If set, a cookie with the name you provide will be set with the CSRF token. |
+| `cookie` | `String` or `Object` | No | `Object` | A cookie with the name you provide will be set with the CSRF token. |
 | `cookie.name` | `String` | No | `CSRF-TOKEN` | The name you provide will be set as the cookie with the CSRF token. |
-| `cookie.options` | `Object` | No | `{}` | A valid Express cookie options object. See [Express' res.cookie](http://expressjs.com/en/4x/api.html#res.cookie) API docs for more information. |
+| `cookie.options` | `Object` | No | `{}` | A valid Express cookie options object. See [Express res.cookie](http://expressjs.com/en/4x/api.html#res.cookie) API docs for more information. |
 | `header` | `String` | No | `csrf-token` | If set, the header name you provide will be expected to have the CSRF token. |
 | `safeVerbs` | `[String]` | No | `['OPTIONS', 'HEAD', 'GET']` | A list of HTTP verbs cosidered `safe` that will skip CSRF token validation.
 
