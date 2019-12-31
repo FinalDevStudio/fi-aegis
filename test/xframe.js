@@ -1,22 +1,20 @@
-'use strict';
-
-const aegis = require('../index');
 const request = require('supertest');
 const assert = require('assert');
+
 const mock = require('./mocks/app');
+const aegis = require('../lib');
 
 describe('XFRAME', function () {
-
   it('should be a function', function () {
     assert(typeof aegis.xframe === 'function');
   });
 
   it('should respond with a DENY header', function (done) {
-    var config = {
+    const config = {
       xframe: 'DENY'
     };
 
-    var app = mock(config);
+    const app = mock(config);
 
     app.get('/', (req, res) => {
       res.status(200).end();
@@ -28,11 +26,11 @@ describe('XFRAME', function () {
   });
 
   it('should respond with a SAMEORIGIN header', function (done) {
-    var config = {
+    const config = {
       xframe: 'SAMEORIGIN'
     };
 
-    var app = mock(config);
+    const app = mock(config);
 
     app.get('/', (req, res) => {
       res.status(200).end();
@@ -46,13 +44,13 @@ describe('XFRAME', function () {
   describe('on concurrent requests', function () {
 
     it('should respond with a DENY header', function (done) {
-      var config = {
+      const config = {
         xframe: 'DENY'
       };
 
-      var app = mock(config);
-      var concurrency = 100;
-      var completed = 0;
+      const app = mock(config);
+      const concurrency = 100;
+      let completed = 0;
 
       app.get('/', (req, res) => {
         res.status(200).end();
@@ -73,7 +71,5 @@ describe('XFRAME', function () {
           .expect(200, checkIfDone);
       }
     });
-
   });
-
 });

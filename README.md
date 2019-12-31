@@ -41,19 +41,18 @@ app.use(session({
 }));
 
 app.use(aegis({
-  csrf: true,
-  csp: {
+  xframe: 'SAMEORIGIN',
+  xssProtection: true,
+  nosniff: true,
+  csrf: {
     angular: true
   },
-  xframe: 'SAMEORIGIN',
-  p3p: 'ABCDEF', /*[DEPRECATED]*/
+  csp: ,
   hsts: {
-    maxAge: 31536000,
     includeSubDomains: true,
+    maxAge: 31536000,
     preload: true
-  },
-  xssProtection: true,
-  nosniff: true
+  }
 }));
 ```
 

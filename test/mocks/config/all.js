@@ -1,21 +1,10 @@
-'use strict';
-
 module.exports = {
-
-  csrf: true,
-
+  csp: require('./cspReport'),
   xframe: 'SAMEORIGIN',
-
-  p3p: 'MY_P3P_VALUE',
-
+  xssProtection: true,
+  nosniff: true,
+  csrf: true,
   hsts: {
     maxAge: 31536000
-  },
-
-  csp: require('./cspReport'),
-
-  xssProtection: true,
-
-  nosniff: true
-
+  }
 };

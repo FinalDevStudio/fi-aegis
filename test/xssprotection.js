@@ -1,22 +1,20 @@
-'use strict';
-
 const request = require('supertest');
-const mock = require('./mocks/app');
-const aegis = require('../index');
 const assert = require('assert');
 
-describe('xssProtection', function () {
+const mock = require('./mocks/app');
+const aegis = require('../lib');
 
+describe('xssProtection', function () {
   it('should be a function', function () {
     assert(typeof aegis.xssProtection === 'function');
   });
 
   it('should respond with an enabled as boolean header', function (done) {
-    var config = {
+    const config = {
       xssProtection: true
     };
 
-    var app = mock(config);
+    const app = mock(config);
 
     app.get('/', (req, res) => {
       res.status(200).end();
@@ -28,14 +26,14 @@ describe('xssProtection', function () {
   });
 
   it('should respond with an enabled, custom mode header', function (done) {
-    var config = {
+    const config = {
       xssProtection: {
         enabled: 1,
         mode: 'foo'
       }
     };
 
-    var app = mock(config);
+    const app = mock(config);
 
     app.get('/', (req, res) => {
       res.status(200).end();
@@ -46,14 +44,32 @@ describe('xssProtection', function () {
       .expect(200, done);
   });
 
-  it('should respond with an enabled as boolean header', function (done) {
-    var config = {
+  it('should respond with an enabled as boolean', function (done) {
+    const config = {
       xssProtection: {
         enabled: true
       }
     };
 
-    var app = mock(config);
+    const app = mock(config);
+
+    app.get('/', (req, res) => {
+      res.status(200).end();
+    });
+
+    request(app).get('/')
+      .expect('X-XSS-Protection', '1; mode=block')
+      .expect(200, done);
+  });
+
+  it('should respond with an enabled as an object string', function (done) {
+    const config = {
+      xssProtection: {
+        enabled: '1'
+      }
+    };
+
+    const app = mock(config);
 
     app.get('/', (req, res) => {
       res.status(200).end();
@@ -65,13 +81,13 @@ describe('xssProtection', function () {
   });
 
   it('should respond with a disabled header', function (done) {
-    var config = {
+    const config = {
       xssProtection: {
         enabled: 0
       }
     };
 
-    var app = mock(config);
+    const app = mock(config);
 
     app.get('/', (req, res) => {
       res.status(200).end();

@@ -1,10 +1,20 @@
 {
+  "plugins": [
+    "security",
+    "mocha",
+    "node"
+  ],
+  "extends": [
+    "plugin:security/recommended",
+    "plugin:mocha/recommended",
+    "plugin:node/recommended",
+    "eslint:recommended"
+  ],
   "env": {
     "browser": false,
-    "es6": true,
-    "node": true
+    "node": true,
+    "es6": true
   },
-  "extends": "eslint:recommended",
   "rules": {
     "no-console": "off",
     "require-jsdoc": "warn",

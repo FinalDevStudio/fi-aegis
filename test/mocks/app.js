@@ -1,24 +1,22 @@
-'use strict';
-
 const cookieSession = require('cookie-session');
 const cookieParser = require('cookie-parser');
 const errorHandler = require('errorhandler');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const express = require('express');
-const aegis = require('../..');
+
+const aegis = require('../../lib');
 
 module.exports = (config, sessionType) => {
-
-  var app = express();
+  const app = express();
 
   app.use(cookieParser());
 
   if (!sessionType || sessionType === 'session') {
     app.use(session({
+      saveUninitialized: true,
       secret: 'abc',
-      resave: true,
-      saveUninitialized: true
+      resave: false
     }));
   } else if (sessionType === 'cookie') {
     app.use(cookieSession({
@@ -41,5 +39,4 @@ module.exports = (config, sessionType) => {
   app.use(errorHandler());
 
   return app;
-
 };
