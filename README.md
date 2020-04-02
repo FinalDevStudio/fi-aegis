@@ -1,3 +1,7 @@
+---
+### No longer maintained.
+---
+
 # Fi Aegis
 
 [![Build Status](https://travis-ci.org/FinalDevStudio/fi-aegis.svg?branch=master)](https://travis-ci.org/FinalDevStudio/fi-aegis)
